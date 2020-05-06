@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+  "name": "Strobe GIF Filter",
+  "description": "Replace strobing GIFs",
+  "version": "0.1",
+  "web_accessible_resources": [
+    "images/*.jpeg",
+    "images/*.jpg",
+    "images/*.png"
+  ],
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "all_frames": false,
+      "run_at": "document_idle",
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
+  "browser_action": {
+    "default_title": "Gif filter popup",
+    "default_popup": "index.html"
+  },
+  "permissions": [
+    "https://some-random-api.ml/*",
+    "storage"
+  ]
+}

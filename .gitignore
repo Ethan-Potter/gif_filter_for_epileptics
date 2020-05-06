@@ -1,0 +1,4 @@
+node_modules/
+prototypes/
+chrome/scripts/content_mutations.js
+*.DS_Store
