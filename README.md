@@ -163,5 +163,5 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 # Future Version Work
 
-- Look into mutation observers to get extension to work on lazy-loaded pages
+- Look into adding options for domain specific rules like GIPHY and tenor
 - Implement drag and drop feature for user to upload their own pictures
