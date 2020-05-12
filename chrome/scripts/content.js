@@ -15,7 +15,6 @@ var image_url = chrome.extension.getURL(file);
 // function for changing gif images to pre-determined image
 function chageGIF (image) {
   getPixels(image.src, function(err, pixels) {
-  function(err, pixels) {
     if(err) {
       console.log("bad image path")
       return
