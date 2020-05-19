@@ -17,11 +17,20 @@ body.options {
   width: 400px;
 }
 
+hr {
+  height: 1px;
+  border-width: 0;
+  color:#ccc;
+  background-color: #ccc;
+  margin:3px;
+}
+
 .header_grid {
   display: grid;
   grid-template-columns: 25% auto;
-  grid-template-rows: 60px;
-  background-color: #551A8B;
+  grid-template-rows: 54px;
+  /* background-color: #ccc; */
+  /* background-color: #551A8B; */
   width: 100%; /*Optional*/
   align-items: center;
   justify-items: center;
@@ -29,8 +38,8 @@ body.options {
 
 .header_grid h1 {
   margin:auto;
-  font-family: Arial;
-  color: #CCBADC;
+  font-family: Helvetica;
+  color: #551A8B;
   font-size: 30px;
 }
 
@@ -45,7 +54,7 @@ body.options {
 
 .switch_column p {
   margin:auto;
-  font-family: Arial;
+  font-family: Helvetica;
   color: #551A8B;
   font-size: 20px;
 }
@@ -132,7 +141,7 @@ input:checked + .slider:before {
 	display:inline-block;
 	cursor:pointer;
 	color:#541a8b;
-	font-family:Arial;
+	font-family:Helvetica;
 	font-size:15px;
 	font-weight:bold;
 	padding:5px 12px;

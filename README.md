@@ -55,7 +55,7 @@ If you are using a linux machine you'll need to clone the git repo for node.js a
 Finally, with chrome and your JavaScript package managers installed, you will now need to install dependencies and development dependencies for the extension and webpack by entering the following shell commands:
 
 ```
-$ yarn add get-pixels
+$ yarn add get-pixels webp-converter
 $ yarn add --dev @babel/core @babel/preset-env @babel/preset-react babel-loader copy-webpack-plugin css-loader file-loader html-webpack-plugin style-loader webpack webpack-cli webpack-extension-manifest-plugin
 ```
 These are the modules you'll need for the extension to run and development modules for using the development environment I'll be touching upon.
@@ -163,5 +163,6 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 # Future Version Work
 
-- Look into adding options for domain specific rules like GIPHY and tenor
+- That websites like GIPHY use .webp image extensions which the "get-pixels" can't handle. Current fix is to search for string ANMF in webpack files. Need to explore how get-pixels works and build function for getting webp pixels google documentation on webp files may be useful https://developers.google.com/speed/webp/docs/using
+- Seems to be some issues with the mutation events. All necessary mutations are captured but it doesn't always change the mutation if it occurs. Perhaps there needs to be a wait time until the mutated element exists.
 - Implement drag and drop feature for user to upload their own pictures

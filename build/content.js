@@ -97,17 +97,31 @@
 // node package used to get pixel information.
 // Will later be used to store gif data using gif_array
 // NOTE that websites like GIPHY use .webp image extensions which the "get-pixels"
-// NOTE can't handle (sees them as 3D array not 4D). If issue can't be solved make
-// NOTE domain specific rules in options.js and link to options in index.js
+// NOTE can't handle. Current fix is to search for string ANMF in webpack files
+// NOTE Need to explore how get-pixels works and build function for getting webp pixels
+// NOTE google documentation on webp files may be useful https://developers.google.com/speed/webp/docs/using
 var getPixels = __webpack_require__(/*! get-pixels */ "./node_modules/get-pixels/dom-pixels.js"); // arrays for storing content data
 
 
 var gif_array = [];
 var images = document.getElementsByTagName('img');
-var file = 'images/cat.jpg';
-var image_url = chrome.extension.getURL(file); // function for changing gif images to pre-determined image
+var file = 'images/512.png';
+var image_url = chrome.extension.getURL(file);
 
-function chageGIF(image) {
+function changeWEBPAnimated(image, type) {
+  var request = new XMLHttpRequest();
+  request.open('GET', image.src, true);
+  request.addEventListener('load', function () {
+    if (request.response.indexOf("ANMF") != -1) {
+      // animated
+      image.src = image_url;
+    }
+  });
+  request.send();
+} // function for changing gif images to pre-determined image
+
+
+function chageGIF(image, type) {
   getPixels(image.src, function (err, pixels) {
     if (err) {
       console.log("bad image path");
@@ -118,6 +132,7 @@ function chageGIF(image) {
 
     if (pixels.shape.length == 4) {
       gif_array.push({
+        'type': type,
         'pixels': pixels,
         'image_src': image.src
       });
@@ -126,12 +141,22 @@ function chageGIF(image) {
 
     ;
   });
+}
+
+function changeAnimation(image, type) {
+  if (image.src.split('.').pop() == 'webp') {
+    changeWEBPAnimated(image, type);
+  } else {
+    chageGIF(image, type);
+  }
+
+  ;
 } // recursion function for itterating over all gifs on page
 
 
 function selectAndReplace(images, type) {
   for (var i = 0; i < images.length; i++) {
-    chageGIF(images[i], type);
+    changeAnimation(images[i], type);
   }
 
   ;
@@ -144,13 +169,42 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (message.txt == "apply_button_clicked") {
     selectAndReplace(images, 'onApply');
   }
-}); // function that runs selectAndReplace() depending on what the user has the
+}); // function that runs depending on what the user has the
 // slider status set to on a page load
 
 function replaceOnSavedData() {
   chrome.storage.sync.get(["sliderStatus"], function (items) {
     if (items.sliderStatus == true) {
-      selectAndReplace(images, 'onLoad');
+      // For on load before mutations occour
+      selectAndReplace(images, 'onLoad'); // BLOCK for handling dynamic pages. Replaces gifs if a mutation that added a "src" to
+      // an image tag was observed. blocked variable is to stop mutation observer
+      // thinking the image replace from the content script was a mutation from the webpage
+
+      var blocked = false;
+      var newValue = image_url;
+      config = {
+        attributes: true,
+        childList: true,
+        characterData: true,
+        characterDataOldValue: true,
+        subtree: true
+      };
+      var MutationObserver = window.MutationObserver;
+      var observer = new MutationObserver(function (mutations) {
+        if (blocked) {
+          blocked = false;
+          return;
+        }
+
+        mutations.forEach(function (mutation) {
+          if (mutation.type === "attributes" && mutation.attributeName === "src" && mutation.target.src != image_url) {
+            console.log(mutation);
+            changeAnimation(mutation.target, 'onMutation');
+            blocked = true;
+          }
+        });
+      });
+      observer.observe(document, config);
     }
   });
 } // content of page needs to be loaded before gifs can be replaced with images
@@ -161,37 +215,7 @@ function replaceOnSavedData() {
 window.onload = function () {
   console.log('content loaded');
   replaceOnSavedData();
-}; // BLOCK for handling dynamic pages. Replaces gifs if a mutation that added a "src" to
-// an image tag was observed. blocked variable is to stop mutation observer
-// thinking the image replace from the content script was a mutation from the webpage
-
-
-var blocked = false; // var Undo = require("undo.js");
-// var stack = new Undo.Stack();
-
-var newValue = image_url;
-config = {
-  attributes: true,
-  childList: true,
-  characterData: true,
-  characterDataOldValue: true,
-  subtree: true
 };
-var MutationObserver = window.MutationObserver;
-var observer = new MutationObserver(function (mutations) {
-  if (blocked) {
-    blocked = false;
-    return;
-  }
-
-  mutations.forEach(function (mutation) {
-    if (mutation.type === "attributes" && mutation.attributeName === "src" && mutation.target.src != image_url) {
-      chageGIF(mutation.target.src, index, 'onMutation');
-      blocked = true;
-    }
-  });
-});
-observer.observe(document, config);
 
 /***/ }),
 
@@ -8015,81 +8039,6 @@ module.exports = __webpack_require__(/*! ./lib/_stream_writable.js */ "./node_mo
 
 /***/ }),
 
-/***/ "./node_modules/safe-buffer/index.js":
-/*!*******************************************!*\
-  !*** ./node_modules/safe-buffer/index.js ***!
-  \*******************************************/
-/*! no static exports found */
-/***/ (function(module, exports, __webpack_require__) {
-
-/* eslint-disable node/no-deprecated-api */
-var buffer = __webpack_require__(/*! buffer */ "./node_modules/buffer/index.js")
-var Buffer = buffer.Buffer
-
-// alternative to using Object.keys for old browsers
-function copyProps (src, dst) {
-  for (var key in src) {
-    dst[key] = src[key]
-  }
-}
-if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow) {
-  module.exports = buffer
-} else {
-  // Copy properties from require('buffer')
-  copyProps(buffer, exports)
-  exports.Buffer = SafeBuffer
-}
-
-function SafeBuffer (arg, encodingOrOffset, length) {
-  return Buffer(arg, encodingOrOffset, length)
-}
-
-SafeBuffer.prototype = Object.create(Buffer.prototype)
-
-// Copy static methods from Buffer
-copyProps(Buffer, SafeBuffer)
-
-SafeBuffer.from = function (arg, encodingOrOffset, length) {
-  if (typeof arg === 'number') {
-    throw new TypeError('Argument must not be a number')
-  }
-  return Buffer(arg, encodingOrOffset, length)
-}
-
-SafeBuffer.alloc = function (size, fill, encoding) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  var buf = Buffer(size)
-  if (fill !== undefined) {
-    if (typeof encoding === 'string') {
-      buf.fill(fill, encoding)
-    } else {
-      buf.fill(fill)
-    }
-  } else {
-    buf.fill(0)
-  }
-  return buf
-}
-
-SafeBuffer.allocUnsafe = function (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  return Buffer(size)
-}
-
-SafeBuffer.allocUnsafeSlow = function (size) {
-  if (typeof size !== 'number') {
-    throw new TypeError('Argument must be a number')
-  }
-  return buffer.SlowBuffer(size)
-}
-
-
-/***/ }),
-
 /***/ "./node_modules/setimmediate/setImmediate.js":
 /*!***************************************************!*\
   !*** ./node_modules/setimmediate/setImmediate.js ***!
@@ -8459,7 +8408,7 @@ Stream.prototype.pipe = function(dest, options) {
 
 /*<replacement>*/
 
-var Buffer = __webpack_require__(/*! safe-buffer */ "./node_modules/safe-buffer/index.js").Buffer;
+var Buffer = __webpack_require__(/*! safe-buffer */ "./node_modules/string_decoder/node_modules/safe-buffer/index.js").Buffer;
 /*</replacement>*/
 
 var isEncoding = Buffer.isEncoding || function (encoding) {
@@ -8730,6 +8679,82 @@ function simpleWrite(buf) {
 function simpleEnd(buf) {
   return buf && buf.length ? this.write(buf) : '';
 }
+
+/***/ }),
+
+/***/ "./node_modules/string_decoder/node_modules/safe-buffer/index.js":
+/*!***********************************************************************!*\
+  !*** ./node_modules/string_decoder/node_modules/safe-buffer/index.js ***!
+  \***********************************************************************/
+/*! no static exports found */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*! safe-buffer. MIT License. Feross Aboukhadijeh <https://feross.org/opensource> */
+/* eslint-disable node/no-deprecated-api */
+var buffer = __webpack_require__(/*! buffer */ "./node_modules/buffer/index.js")
+var Buffer = buffer.Buffer
+
+// alternative to using Object.keys for old browsers
+function copyProps (src, dst) {
+  for (var key in src) {
+    dst[key] = src[key]
+  }
+}
+if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow) {
+  module.exports = buffer
+} else {
+  // Copy properties from require('buffer')
+  copyProps(buffer, exports)
+  exports.Buffer = SafeBuffer
+}
+
+function SafeBuffer (arg, encodingOrOffset, length) {
+  return Buffer(arg, encodingOrOffset, length)
+}
+
+SafeBuffer.prototype = Object.create(Buffer.prototype)
+
+// Copy static methods from Buffer
+copyProps(Buffer, SafeBuffer)
+
+SafeBuffer.from = function (arg, encodingOrOffset, length) {
+  if (typeof arg === 'number') {
+    throw new TypeError('Argument must not be a number')
+  }
+  return Buffer(arg, encodingOrOffset, length)
+}
+
+SafeBuffer.alloc = function (size, fill, encoding) {
+  if (typeof size !== 'number') {
+    throw new TypeError('Argument must be a number')
+  }
+  var buf = Buffer(size)
+  if (fill !== undefined) {
+    if (typeof encoding === 'string') {
+      buf.fill(fill, encoding)
+    } else {
+      buf.fill(fill)
+    }
+  } else {
+    buf.fill(0)
+  }
+  return buf
+}
+
+SafeBuffer.allocUnsafe = function (size) {
+  if (typeof size !== 'number') {
+    throw new TypeError('Argument must be a number')
+  }
+  return Buffer(size)
+}
+
+SafeBuffer.allocUnsafeSlow = function (size) {
+  if (typeof size !== 'number') {
+    throw new TypeError('Argument must be a number')
+  }
+  return buffer.SlowBuffer(size)
+}
+
 
 /***/ }),
 

@@ -43,7 +43,8 @@ const config = {
       template: "./chrome/static/options.html",
       hash: true
     }),
-    new CopyPlugin([
+    new CopyPlugin({
+    patterns: [
       {
         from: "chrome/icons",
         to: "icons"
@@ -52,7 +53,8 @@ const config = {
         from: "chrome/images",
         to: "images"
       }
-    ]),
+    ],
+  }),
     new WebpackExtensionManifestPlugin({
       config: {
         base: baseManifest
